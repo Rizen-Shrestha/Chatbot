@@ -9,6 +9,11 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_with_google.dart';
 import '../../features/auth/presentation/manager/auth_bloc.dart';
+import '../../features/onboarding/data/datasources/onboarding_remote_data_source.dart';
+import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
+import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
+import '../../features/onboarding/domain/usecases/save_user_preferences.dart';
+import '../../features/onboarding/presentation/manager/onboarding_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -19,12 +24,12 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FacebookAuth.instance);
   sl.registerLazySingleton(() => SignInWithGoogleUseCase(sl()));
   sl.registerLazySingleton<AuthRepository>(
-        () => AuthRepositoryImpl(remoteDataSource: sl()),
+    () => AuthRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Data sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
-        () => AuthRemoteDataSourceImpl(
+    () => AuthRemoteDataSourceImpl(
       firebaseAuth: sl(),
       firestore: sl(),
       googleSignIn: sl(),
@@ -32,8 +37,19 @@ Future<void> init() async {
     ),
   );
 
-  sl.registerFactory(() => AuthBloc(
-    authRepository: sl(),
-    signInWithGoogleUseCase: sl(),
-  ));
+  sl.registerFactory(
+    () => AuthBloc(authRepository: sl(), signInWithGoogleUseCase: sl()),
+  );
+
+  sl.registerFactory(() => OnboardingCubit(saveUserPreferencesUseCase: sl()));
+
+  sl.registerLazySingleton(() => SaveUserPreferencesUseCase(sl()));
+
+  sl.registerLazySingleton<OnboardingRepository>(
+    () => OnboardingRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<OnboardingRemoteDataSource>(
+    () => OnboardingRemoteDataSourceImpl(firestore: sl()),
+  );
 }

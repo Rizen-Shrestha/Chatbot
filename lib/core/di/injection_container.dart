@@ -9,6 +9,12 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_with_google.dart';
 import '../../features/auth/presentation/manager/auth_bloc.dart';
+import '../../features/chat/data/datasources/chat_remote_data_source.dart';
+import '../../features/chat/data/repositories/chat_repository_impl.dart';
+import '../../features/chat/domain/repositories/chat_repository.dart';
+import '../../features/chat/domain/usecases/get_chat_history.dart';
+import '../../features/chat/domain/usecases/send_message.dart';
+import '../../features/chat/presentation/manager/chat_cubit.dart';
 import '../../features/onboarding/data/datasources/onboarding_remote_data_source.dart';
 import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
 import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
@@ -52,4 +58,18 @@ Future<void> init() async {
   sl.registerLazySingleton<OnboardingRemoteDataSource>(
     () => OnboardingRemoteDataSourceImpl(firestore: sl()),
   );
+
+  sl.registerFactory(() => ChatCubit(getChatHistoryUseCase: sl(), sendMessageUseCase: sl()));
+
+  // UseCases
+  sl.registerLazySingleton(() => GetChatHistoryUseCase(sl()));
+  sl.registerLazySingleton(() => SendMessageUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(remoteDataSource: sl()));
+
+  // Data Sources
+  sl.registerLazySingleton<ChatRemoteDataSource>(() => ChatRemoteDataSourceImpl(firestore: sl()));
+
+  
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart'; // 1. Added GoRouter import
 import '../../../../core/di/injection_container.dart';
 import '../manager/chat_cubit.dart';
 import '../manager/chat_state.dart';
@@ -24,14 +25,17 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
+            // 2. Changed from Navigator.pushNamed to context.push for GoRouter
+            onPressed: () => context.push('/profile'),
           ),
         ],
       ),
       body: BlocProvider(
         create: (_) => sl<ChatCubit>()..listenToMessages(uid),
+        // 3. Renamed outer builder context parameter to 'blocContext'
+        // to prevent scope shadowing issues with the root Scaffold build context.
         child: BlocBuilder<ChatCubit, ChatState>(
-          builder: (context, state) {
+          builder: (blocContext, state) {
             if (state is ChatInitial) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -49,10 +53,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     reverse: true,
                     padding: const EdgeInsets.all(16),
                     itemCount:
-                        messages.length +
+                    messages.length +
                         (chatState.activeStreamingChunk.isNotEmpty ? 1 : 0),
                     itemBuilder: (context, index) {
-                      // Handle streaming message bubble rendering at top of reverse array index 0
                       if (chatState.activeStreamingChunk.isNotEmpty &&
                           index == 0) {
                         return _buildMessageBubble(
@@ -62,7 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       }
 
                       final actualIndex =
-                          chatState.activeStreamingChunk.isNotEmpty
+                      chatState.activeStreamingChunk.isNotEmpty
                           ? index - 1
                           : index;
                       final msg = messages[actualIndex];
@@ -73,7 +76,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
                 ),
-                _buildMessageComposer(context),
+                // 4. Passed 'blocContext' so the composer can access ChatCubit safely
+                _buildMessageComposer(blocContext),
               ],
             );
           },
@@ -123,6 +127,7 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: const Icon(Icons.send, color: Colors.deepPurpleAccent),
             onPressed: () {
               final text = _controller.text;
+              // 5. This context now correctly has the ChatCubit provider in its ancestral tree!
               context.read<ChatCubit>().sendChatMessage(uid, text);
               _controller.clear();
             },

@@ -1,101 +1,106 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import '../models/chat_model.dart';
+import 'package:google_generative_ai/google_generative_ai.dart'; // Import Google SDK
 
 abstract class ChatRemoteDataSource {
-  Stream<List<ChatModel>> getChatHistory(String uid);
-
-  Stream<String> sendAndStreamAI(String uid, String messageText);
+  Stream<String> sendMessageAndStreamResponse(String uid, String messageText);
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   final FirebaseFirestore firestore;
 
-  // NOTE: Insert your real Gemini API key here or source from environment variables safely.
-  static const _apiKey = "YOUR_GEMINI_API_KEY";
-
   ChatRemoteDataSourceImpl({required this.firestore});
 
   @override
-  Stream<List<ChatModel>> getChatHistory(String uid) {
-    return firestore
-        .collection('users')
-        .doc(uid)
-        .collection('messages')
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs.map((doc) => ChatModel.fromFirestore(doc)).toList(),
-        );
-  }
-
-  @override
-  Stream<String> sendAndStreamAI(String uid, String messageText) async* {
-    final userMsgRef = firestore
+  Stream<String> sendMessageAndStreamResponse(String uid, String messageText) async* {
+    // 1. Save user's prompt to Firestore history first
+    final userMessageRef = firestore
         .collection('users')
         .doc(uid)
         .collection('messages')
         .doc();
 
-    // 1. Immediately save User's incoming message to Firestore
-    await userMsgRef.set({
+    await userMessageRef.set({
       'text': messageText,
       'sender': 'user',
       'timestamp': FieldValue.serverTimestamp(),
     });
 
-    // 2. Query user preferences to engineer the dynamic persona system prompt
+    // 2. Retrieve user preferences from the database to build our personalized persona
     final userDoc = await firestore.collection('users').doc(uid).get();
-    final List<dynamic> interests = userDoc.data()?['interests'] ?? [];
+    final userData = userDoc.data() ?? {};
+    final List<String> interests = List<String>.from(userData['interests'] ?? []);
 
-    final systemInstruction =
-        '''
-    You are an AI life assistant. The user has explicitly selected these core life interests: ${interests.join(', ')}. 
-    Tailor your responses specifically through these lenses. If a user asks a general question, skew the analogy, context, advice, or layout to serve these interests natively. Keep answers actionable, engaging, and dynamic.
-    ''';
+    // Create a personalized instruction prompt based on their Onboarding choices
+    String systemInstructions = "You are a helpful, empathetic, and encouraging personal AI companion.";
+    if (interests.isNotEmpty) {
+      systemInstructions += " The user has specified the following target focus areas: ${interests.join(', ')}."
+          " Act as a specialized coach in these domains and tailor your insights to help them succeed here.";
+    }
 
-    // 3. Initialize Gemini with strict instructions
+    // 3. Initialize the Gemini Model
+    // Grab your key securely using Environment Variables
+    const apiKey = String.fromEnvironment('GEMINI_API_KEY');
+    if (apiKey.isEmpty) {
+      yield "Error: Gemini API key is missing. Please check your compilation flags.";
+      return;
+    }
+
+    // Initialize using gemini-2.5-flash (or your preferred active model)
     final model = GenerativeModel(
-      model: 'gemini-1.5-flash',
-      apiKey: _apiKey,
-      systemInstruction: Content.system(systemInstruction),
+      model: 'gemini-2.5-flash',
+      apiKey: apiKey,
+      systemInstruction: Content.system(systemInstructions),
     );
 
-    // 4. Gather recent conversation context for chat history injection
-    final pastMessagesSnapshot = await firestore
+    // 4. Build Chat History Context
+    // We fetch the last 10 messages from firestore so the AI understands conversation context
+    final historySnapshot = await firestore
         .collection('users')
         .doc(uid)
         .collection('messages')
-        .orderBy('timestamp', descending: false)
-        .limitToLast(10)
+        .orderBy('timestamp', descending: true)
+        .limit(10)
         .get();
 
-    final List<Content> contentHistory = pastMessagesSnapshot.docs.map((doc) {
-      final role = doc.data()['sender'] == 'user' ? 'user' : 'model';
-      return Content(role, [TextPart(doc.data()['text'] ?? '')]);
-    }).toList();
+    // Map Firestore documents to Content structure for the SDK
+    final List<Content> chatSessionContents = [];
+    final reversedDocs = historySnapshot.docs.reversed.toList();
 
-    // 5. Send stream request to the AI cluster
-    final responseStream = model.generateContentStream(contentHistory);
+    for (var doc in reversedDocs) {
+      final data = doc.data();
+      final text = data['text'] as String? ?? '';
+      final isUser = data['sender'] == 'user';
 
-    String fullResponseAccumulator = "";
-    final aiMsgRef = firestore
-        .collection('users')
-        .doc(uid)
-        .collection('messages')
-        .doc();
-
-    await for (final chunk in responseStream) {
-      if (chunk.text != null) {
-        fullResponseAccumulator += chunk.text!;
-        yield chunk.text!;
+      if (text.isNotEmpty) {
+        chatSessionContents.add(
+          isUser ? Content.text(text) : Content.model([TextPart(text)]),
+        );
       }
     }
 
-    // 6. Complete transaction by logging full AI output inside history records
-    await aiMsgRef.set({
-      'text': fullResponseAccumulator,
+    // Append the newly sent message to the active payload session
+    chatSessionContents.add(Content.text(messageText));
+
+    // 5. Generate and Stream the response chunks
+    final responseStream = model.generateContentStream(chatSessionContents);
+    String fullModelResponse = "";
+
+    await for (final chunk in responseStream) {
+      final chunkText = chunk.text ?? "";
+      if (chunkText.isNotEmpty) {
+        fullModelResponse += chunkText;
+        yield chunkText; // Yielding each piece instantly to ChatCubit for UI updates
+      }
+    }
+
+    // 6. Save the AI's fully synthesized response back to Firestore history
+    await firestore
+        .collection('users')
+        .doc(uid)
+        .collection('messages')
+        .add({
+      'text': fullModelResponse,
       'sender': 'ai',
       'timestamp': FieldValue.serverTimestamp(),
     });

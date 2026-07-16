@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../manager/auth_bloc.dart';
 import '../manager/auth_event.dart';
 import '../manager/auth_state.dart';
@@ -19,11 +20,11 @@ class LoginScreen extends StatelessWidget {
           }
           if (state is AuthenticatedNeedsOnboarding) {
             // Navigate to Onboarding Screen
-            Navigator.pushReplacementNamed(context, '/onboarding');
+            context.go('/onboarding');
           }
           if (state is AuthenticatedToGo) {
             // Navigate to Main Chat Screen
-            Navigator.pushReplacementNamed(context, '/chat');
+            context.go('/chat');
           }
         },
         builder: (context, state) {

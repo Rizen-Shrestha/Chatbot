@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../manager/onboarding_cubit.dart';
 import '../manager/onboarding_state.dart';
@@ -39,7 +40,7 @@ class OnboardingScreen extends StatelessWidget {
             }
             if (state is OnboardingSuccess) {
               // Onboarding complete, advance to Core AI chatbot screen
-              Navigator.pushReplacementNamed(context, '/chat');
+              context.go('/chat');
             }
           },
           builder: (context, state) {

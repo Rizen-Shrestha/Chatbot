@@ -4,10 +4,12 @@ import '../../domain/entities/chat_message.dart';
 import '../../domain/usecases/get_chat_history.dart';
 import '../../domain/usecases/send_message.dart';
 import 'chat_state.dart';
+import '../../../gamification/domain/usecases/award_points.dart';
 
 class ChatCubit extends Cubit<ChatState> {
   final GetChatHistoryUseCase getChatHistoryUseCase;
   final SendMessageUseCase sendMessageUseCase;
+  final AwardPointsUseCase awardPointsUseCase;
 
   StreamSubscription? _historySubscription;
   List<ChatMessage> _cachedMessages = [];
@@ -15,6 +17,7 @@ class ChatCubit extends Cubit<ChatState> {
   ChatCubit({
     required this.getChatHistoryUseCase,
     required this.sendMessageUseCase,
+    required this.awardPointsUseCase,
   }) : super(ChatInitial());
 
   void listenToMessages(String uid) {
@@ -30,7 +33,6 @@ class ChatCubit extends Cubit<ChatState> {
 
     String temporaryChunk = "";
 
-    // Inject streaming response listener
     sendMessageUseCase(uid, messageText).listen(
       (chunk) {
         temporaryChunk += chunk;
@@ -41,9 +43,12 @@ class ChatCubit extends Cubit<ChatState> {
           ),
         );
       },
-      onDone: () {
-        // Clear streaming cache layer once written completely to DB
+      onDone: () async {
         emit(ChatHistoryLoaded(_cachedMessages, activeStreamingChunk: ""));
+
+        try {
+          await awardPointsUseCase(uid);
+        } catch (e) {}
       },
       onError: (err) => emit(ChatFailure(err.toString())),
     );

@@ -15,6 +15,12 @@ import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/domain/usecases/get_chat_history.dart';
 import '../../features/chat/domain/usecases/send_message.dart';
 import '../../features/chat/presentation/manager/chat_cubit.dart';
+import '../../features/gamification/data/datasources/gamification_remote_data_source.dart';
+import '../../features/gamification/data/repositories/gamification_repository_impl.dart';
+import '../../features/gamification/domain/repositories/gamification_repository.dart';
+import '../../features/gamification/domain/usecases/award_points.dart';
+import '../../features/gamification/domain/usecases/get_gamification_profile.dart';
+import '../../features/gamification/presentation/manager/gamification_cubit.dart';
 import '../../features/onboarding/data/datasources/onboarding_remote_data_source.dart';
 import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
 import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
@@ -59,17 +65,46 @@ Future<void> init() async {
     () => OnboardingRemoteDataSourceImpl(firestore: sl()),
   );
 
-  sl.registerFactory(() => ChatCubit(getChatHistoryUseCase: sl(), sendMessageUseCase: sl()));
+  // Cubit
+  sl.registerFactory(
+    () => ChatCubit(
+      getChatHistoryUseCase: sl(),
+      sendMessageUseCase: sl(),
+      awardPointsUseCase: sl(),
+    ),
+  );
 
   // UseCases
   sl.registerLazySingleton(() => GetChatHistoryUseCase(sl()));
   sl.registerLazySingleton(() => SendMessageUseCase(sl()));
 
   // Repository
-  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(remoteDataSource: sl()));
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(remoteDataSource: sl()),
+  );
 
   // Data Sources
-  sl.registerLazySingleton<ChatRemoteDataSource>(() => ChatRemoteDataSourceImpl(firestore: sl()));
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(firestore: sl()),
+  );
 
+  //! Features - Gamification
+  // Cubit
+  sl.registerFactory(
+    () => GamificationCubit(getGamificationProfileUseCase: sl()),
+  );
 
+  // UseCases
+  sl.registerLazySingleton(() => GetGamificationProfileUseCase(sl()));
+  sl.registerLazySingleton(() => AwardPointsUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<GamificationRepository>(
+    () => GamificationRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data Sources
+  sl.registerLazySingleton<GamificationRemoteDataSource>(
+    () => GamificationRemoteDataSourceImpl(firestore: sl()),
+  );
 }

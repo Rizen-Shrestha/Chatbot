@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "202103645007",
+    "project_id": "hallooo-27148",
+    "storage_bucket": "hallooo-27148.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:202103645007:android:9309d248ad78f47bd7db3a",
+        "android_client_info": {
+          "package_name": "com.islington.chatbot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "202103645007-3csuemv1iq59894dn6pa8oghi9srlvbf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtY0KrNSvlRHSLuNk-68JctsXGMMrkoN0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "202103645007-3csuemv1iq59894dn6pa8oghi9srlvbf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:202103645007:android:3b471860fc3fe258d7db3a",
+        "android_client_info": {
+          "package_name": "com.islington.dummy_shop"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "202103645007-2dkdqqt5v2l1anp7v3clkjmritci2i33.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.islington.dummy_shop",
+            "certificate_hash": "aa535d8b0a22c261665dfa913cbc0c8b4521f606"
+          }
+        },
+        {
+          "client_id": "202103645007-3csuemv1iq59894dn6pa8oghi9srlvbf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtY0KrNSvlRHSLuNk-68JctsXGMMrkoN0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "202103645007-3csuemv1iq59894dn6pa8oghi9srlvbf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

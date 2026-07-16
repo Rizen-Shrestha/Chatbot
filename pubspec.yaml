@@ -40,7 +40,7 @@ dependencies:
   # Firebase & Auth
   firebase_core: ^3.0.0
   firebase_auth: ^5.0.0
-  cloud_firestore: ^5.0.0
+  cloud_firestore: ^5.6.12
   google_sign_in: ^6.2.1
   flutter_facebook_auth: ^7.0.0 # Standard production library for Facebook SDK integration
 
@@ -49,6 +49,7 @@ dependencies:
 
   # Extras
   equatable: ^2.0.5 # Makes comparing state and entities straightforward
+  go_router: ^14.0.0
 
 dev_dependencies:
   flutter_test:

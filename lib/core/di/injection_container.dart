@@ -8,6 +8,7 @@ import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_with_google.dart';
+import '../../features/auth/presentation/manager/auth_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -31,4 +32,8 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(() => AuthBloc(
+    authRepository: sl(),
+    signInWithGoogleUseCase: sl(),
+  ));
 }

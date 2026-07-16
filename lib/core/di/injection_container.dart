@@ -71,5 +71,5 @@ Future<void> init() async {
   // Data Sources
   sl.registerLazySingleton<ChatRemoteDataSource>(() => ChatRemoteDataSourceImpl(firestore: sl()));
 
-  
+
 }

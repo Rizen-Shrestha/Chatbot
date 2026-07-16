@@ -10,7 +10,7 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_with_google.dart';
 import '../../features/auth/presentation/manager/auth_bloc.dart';
 import '../../features/chat/data/datasources/chat_remote_data_source.dart';
-import '../../features/chat/data/repositories/chat_repository_impl.dart';
+import '../../features/chat/data/repositories/chat_repository_impl.dart' hide ChatRemoteDataSourceImpl, ChatRemoteDataSource;
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/domain/usecases/get_chat_history.dart';
 import '../../features/chat/domain/usecases/send_message.dart';
